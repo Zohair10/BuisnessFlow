@@ -2,10 +2,14 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
+const cookieName = process.env.VERCEL === "1"
+  ? "__Secure-next-auth.session-token"
+  : "next-auth.session-token"
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET })
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET, cookieName })
   const isLoggedIn = !!token
 
   const isAuthRoute = pathname === "/login" || pathname === "/signup"
