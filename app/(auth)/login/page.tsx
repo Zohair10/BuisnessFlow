@@ -47,11 +47,20 @@ function LoginForm() {
     setError(null)
     setIsLoading(true)
 
-    await signIn("credentials", {
+    const result = await signIn("credentials", {
       email: data.email,
       password: data.password,
-      callbackUrl,
+      redirect: false,
     })
+
+    if (result?.error) {
+      setError("Invalid email or password. Please try again.")
+      setIsLoading(false)
+      return
+    }
+
+    // Full page redirect to ensure session cookie is picked up
+    window.location.href = callbackUrl
   }
 
   async function handleOAuthSignIn(provider: string) {

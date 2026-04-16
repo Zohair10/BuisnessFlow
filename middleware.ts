@@ -17,8 +17,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Let root/auth routes handle their own redirects so landing stays on /login.
-  if (pathname === "/" || isAuthRoute) {
+  // Redirect authenticated users away from auth pages
+  if (isAuthRoute && isLoggedIn) {
+    return NextResponse.redirect(new URL("/chat", req.nextUrl))
+  }
+
+  // Let root route handle its own logic
+  if (pathname === "/") {
     return NextResponse.next()
   }
 
