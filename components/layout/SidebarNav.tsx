@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
 import {
   MessageSquare,
   Clock,
@@ -10,10 +11,12 @@ import {
   Settings,
   ChevronLeft,
   Menu,
+  LogOut,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   Tooltip,
   TooltipContent,
@@ -44,6 +47,21 @@ interface SidebarNavProps {
 
 function SidebarNav({ collapsed = false, onToggleCollapse }: SidebarNavProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const [loggingOut, setLoggingOut] = React.useState(false)
+
+  const userInitials = (session?.user?.name ?? session?.user?.email ?? "U")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+
+  const handleLogout = React.useCallback(async () => {
+    setLoggingOut(true)
+    await signOut({ redirect: false })
+    window.location.href = "/login"
+  }, [])
 
   const groupedItems = sectionOrder.map((section) => ({
     section,
@@ -151,23 +169,92 @@ function SidebarNav({ collapsed = false, onToggleCollapse }: SidebarNavProps) {
           ))}
         </nav>
 
-        {/* Collapse toggle */}
+        {/* User section + collapse toggle */}
         <div className="border-t border-sidebar-border p-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-8 w-8 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-              !collapsed && "ml-auto"
-            )}
-            onClick={onToggleCollapse}
-          >
-            {collapsed ? (
-              <Menu className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
+          {collapsed ? (
+            <div className="flex flex-col items-center gap-2">
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary/20 text-[11px] text-primary">
+                        {userInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p className="font-medium">{session?.user?.name ?? "User"}</p>
+                    <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-sidebar-foreground/50 hover:text-destructive hover:bg-sidebar-accent"
+                      onClick={handleLogout}
+                      disabled={loggingOut}
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">Log out</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      onClick={onToggleCollapse}
+                    >
+                      <Menu className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">Expand</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarFallback className="bg-primary/20 text-[11px] text-primary">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 overflow-hidden">
+                  <p className="truncate text-sm font-medium text-sidebar-foreground">
+                    {session?.user?.name ?? "User"}
+                  </p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {session?.user?.email}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-sidebar-foreground/50 hover:text-destructive hover:bg-sidebar-accent"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  title="Log out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  onClick={onToggleCollapse}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
     </TooltipProvider>
