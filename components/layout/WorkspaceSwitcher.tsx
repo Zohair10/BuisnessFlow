@@ -20,6 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { signOut } from "next-auth/react"
 
 interface Workspace {
   id: string
@@ -113,7 +114,10 @@ function WorkspaceSwitcher({
               </a>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={onLogout}
+              onClick={async () => {
+                await signOut({ redirect: false })
+                window.location.href = "/login"
+              }}
               className="text-destructive focus:text-destructive"
             >
               <LogOut className="mr-2 h-4 w-4" />
@@ -202,7 +206,10 @@ function WorkspaceSwitcher({
             </a>
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={onLogout}
+            onClick={async () => {
+              await signOut({ redirect: false })
+              window.location.href = "/login"
+            }}
             className="text-destructive focus:text-destructive"
           >
             <LogOut className="mr-2 h-4 w-4" />
